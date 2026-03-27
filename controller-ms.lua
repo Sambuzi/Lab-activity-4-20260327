@@ -46,6 +46,24 @@ function avoid_obstacles()
     return v
 end
 
+function update_leds(light_v)
+    local max_prox = 0.0
+    for i = 1, #robot.proximity do
+        if robot.proximity[i].value > max_prox then
+            max_prox = robot.proximity[i].value
+        end
+    end
+
+    -- Priorita' LED: rosso se ostacolo molto vicino, giallo se punta verso la luce.
+    if max_prox > 0.95 then
+        robot.leds.set_all_colors("red")
+    elseif light_v.length > 0.1 and math.abs(light_v.angle) < 0.35 then
+        robot.leds.set_all_colors("yellow")
+    else
+        robot.leds.set_all_colors("green")
+    end
+end
+
 
 function step()
     local cruise_vec = cruise()
@@ -65,12 +83,8 @@ function step()
     --trasformazione da velocità lineare e angolare a velocità delle ruote
     local vl = v - (L / 2) * omega
     local vr = v + (L / 2) * omega
-    --se becca un ostacolo troppo vicino, si accende di rosso, altrimenti è verde
-    if math.abs(angle) > 1.2 then
-        robot.leds.set_all_colors("red")
-    else
-        robot.leds.set_all_colors("green")
-    end
+
+    update_leds(light_v)
 
     robot.wheels.set_velocity(vl, vr)
 end
