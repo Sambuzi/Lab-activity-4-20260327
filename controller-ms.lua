@@ -1,0 +1,79 @@
+local vector = require "vector"
+
+MAX_VELOCITY = 15
+L = 0
+
+function init()
+    robot.leds.set_all_colors("green")
+    L = robot.wheels.axis_length
+end
+
+-- vettore attrattivo verso la luce
+function go_to_light()
+    local v = {length = 0.0, angle = 0.0}
+
+    for i = 1, #robot.light do
+        local s = robot.light[i]
+        if s.value > 0.0 then
+            local c = {
+                length = s.value,
+                angle = s.angle
+            }
+            v = vector.vec2_polar_sum(v, c)
+        end
+    end
+
+    return v
+end
+
+-- vettore repulsivo dagli ostacoli
+function avoid_obstacles()
+    local v = {length = 0.0, angle = 0.0}
+
+    for i = 1, #robot.proximity do
+        local s = robot.proximity[i]
+        if s.value > 0.0 then
+            local c = {
+                length = s.value * s.value * 2.0,
+                angle = s.angle + math.pi
+            }
+            v = vector.vec2_polar_sum(v, c)
+        end
+    end
+
+    return v
+end
+
+function step()
+    local cruise_vec = {length = 0.5, angle = 0.0}
+
+    local light_v = go_to_light()
+    local avoid_v = avoid_obstacles()
+
+    local res = vector.vec2_polar_sum(light_v, avoid_v)
+    res = vector.vec2_polar_sum(res, cruise_vec)
+
+    local strength = res.length
+    local angle = res.angle
+
+    local v = MAX_VELOCITY * strength * math.cos(angle)
+    local omega = (2.0 * MAX_VELOCITY / L) * math.sin(angle)
+
+    local vl = v - (L / 2) * omega
+    local vr = v + (L / 2) * omega
+
+    if math.abs(angle) > 1.2 then
+        robot.leds.set_all_colors("red")
+    else
+        robot.leds.set_all_colors("green")
+    end
+
+    robot.wheels.set_velocity(vl, vr)
+end
+
+function reset()
+    robot.leds.set_all_colors("green")
+end
+
+function destroy()
+end
