@@ -7,7 +7,11 @@ function init()
     robot.leds.set_all_colors("green")
     L = robot.wheels.axis_length
 end
-
+--vertore di crociera, che spinge il robot a muoversi in avanti
+function cruise()
+    local v = {length = 0.5, angle = 0.0}
+    return v
+end
 -- vettore attrattivo verso la luce
 function go_to_light()
     local v = {length = 0.0, angle = 0.0}
@@ -22,7 +26,6 @@ function go_to_light()
             v = vector.vec2_polar_sum(v, c)
         end
     end
-
     return v
 end
 
@@ -40,13 +43,12 @@ function avoid_obstacles()
             v = vector.vec2_polar_sum(v, c)
         end
     end
-
     return v
 end
 
-function step()
-    local cruise_vec = {length = 0.5, angle = 0.0}
 
+function step()
+    local cruise_vec = cruise()
     local light_v = go_to_light()
     local avoid_v = avoid_obstacles()
 
@@ -56,12 +58,14 @@ function step()
     local strength = res.length
     local angle = res.angle
 
+    --trasformazione di v e omega da forza e direzione del vettore risultante
     local v = MAX_VELOCITY * strength * math.cos(angle)
     local omega = (2.0 * MAX_VELOCITY / L) * math.sin(angle)
 
+    --trasformazione da velocità lineare e angolare a velocità delle ruote
     local vl = v - (L / 2) * omega
     local vr = v + (L / 2) * omega
-
+    --se becca un ostacolo troppo vicino, si accende di rosso, altrimenti è verde
     if math.abs(angle) > 1.2 then
         robot.leds.set_all_colors("red")
     else
