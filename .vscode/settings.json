@@ -1,0 +1,13 @@
+{
+    "Lua.diagnostics.globals": [
+        "init",
+        "go_to_light",
+        "cruise",
+        "avoid_obstacles",
+        "update_leds",
+        "step",
+        "robot",
+        "reset",
+        "destroy"
+    ]
+}
