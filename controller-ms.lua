@@ -1,6 +1,9 @@
 local vector = require "vector"
 
 MAX_VELOCITY = 15
+TARGET_TURN_VELOCITY = 3
+NEAR_LIGHT_VALUE = 0.9
+OBSTACLE_CLOSE_VALUE = 0.95
 L = 0
 
 function init()
@@ -48,7 +51,17 @@ function avoid_obstacles()
     return v
 end
 
-function update_leds(light_v)
+function near_light()
+    local max_light = 0.0
+    for i = 1, #robot.light do
+        if robot.light[i].value > max_light then
+            max_light = robot.light[i].value
+        end
+    end
+    return max_light >= NEAR_LIGHT_VALUE
+end
+
+function update_leds()
     local max_prox = 0.0
     for i = 1, #robot.proximity do
         if robot.proximity[i].value > max_prox then
@@ -56,7 +69,7 @@ function update_leds(light_v)
         end
     end
 
-    if max_prox > 0.95 then
+    if max_prox > OBSTACLE_CLOSE_VALUE then
         robot.leds.set_all_colors("red")
     else
         robot.leds.set_all_colors("green")
@@ -68,6 +81,12 @@ function step()
     local cruise_vec = cruise()
     local light_v = go_to_light()
     local avoid_v = avoid_obstacles()
+
+    if near_light() and avoid_v.length < OBSTACLE_CLOSE_VALUE then
+        update_leds()
+        robot.wheels.set_velocity(-TARGET_TURN_VELOCITY, TARGET_TURN_VELOCITY)
+        return
+    end
 
     local res = vector.vec2_polar_sum(light_v, avoid_v)
     res = vector.vec2_polar_sum(res, cruise_vec)
@@ -90,7 +109,7 @@ function step()
         vr = vr * scale
     end
 
-    update_leds(light_v)
+    update_leds()
 
     robot.wheels.set_velocity(vl, vr)
 end

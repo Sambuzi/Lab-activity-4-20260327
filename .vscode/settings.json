@@ -8,6 +8,7 @@
         "step",
         "robot",
         "reset",
-        "destroy"
+        "destroy",
+        "near_light"
     ]
 }
