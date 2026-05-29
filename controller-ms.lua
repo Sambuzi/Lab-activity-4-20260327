@@ -7,12 +7,14 @@ function init()
     robot.leds.set_all_colors("green")
     L = robot.wheels.axis_length
 end
---vertore di crociera, che spinge il robot a muoversi in avanti
+
+-- Cruise schema: pushes the robot forward.
 function cruise()
     local v = {length = 0.5, angle = 0.0}
     return v
 end
--- vettore attrattivo verso la luce
+
+-- Attraction schema: moves the robot towards the light.
 function go_to_light()
     local v = {length = 0.0, angle = 0.0}
 
@@ -29,7 +31,7 @@ function go_to_light()
     return v
 end
 
--- vettore repulsivo dagli ostacoli
+-- Repulsion schema: pushes the robot away from obstacles.
 function avoid_obstacles()
     local v = {length = 0.0, angle = 0.0}
 
@@ -54,11 +56,8 @@ function update_leds(light_v)
         end
     end
 
-    -- Priorita' LED: rosso se ostacolo molto vicino, giallo se punta verso la luce.
     if max_prox > 0.95 then
         robot.leds.set_all_colors("red")
-    elseif light_v.length > 0.1 and math.abs(light_v.angle) < 0.35 then
-        robot.leds.set_all_colors("yellow")
     else
         robot.leds.set_all_colors("green")
     end
@@ -76,13 +75,20 @@ function step()
     local strength = res.length
     local angle = res.angle
 
-    --trasformazione di v e omega da forza e direzione del vettore risultante
+    -- Convert the resulting force into linear and angular velocity.
     local v = MAX_VELOCITY * strength * math.cos(angle)
     local omega = (2.0 * MAX_VELOCITY / L) * math.sin(angle)
 
-    --trasformazione da velocità lineare e angolare a velocità delle ruote
+    -- Convert linear and angular velocity into wheel velocity.
     local vl = v - (L / 2) * omega
     local vr = v + (L / 2) * omega
+
+    local max_abs = math.max(math.abs(vl), math.abs(vr))
+    if max_abs > MAX_VELOCITY then
+        local scale = MAX_VELOCITY / max_abs
+        vl = vl * scale
+        vr = vr * scale
+    end
 
     update_leds(light_v)
 

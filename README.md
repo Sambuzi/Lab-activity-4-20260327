@@ -25,8 +25,8 @@ Nel ciclo `step()` il robot:
 
 Indicatore LED:
 
-- `verde`: traiettoria relativamente allineata;
-- `rosso`: forte deviazione angolare (rotazione marcata).
+- `rosso`: ostacolo molto vicino;
+- `verde`: navigazione normale.
 
 ## Requisiti
 
@@ -53,4 +53,3 @@ Per terminare la simulazione, chiudere la finestra ARGoS o interrompere il proce
   - posizione/intensita' della luce;
   - numero/disposizione degli ostacoli;
   - posizione iniziale del robot.
-
